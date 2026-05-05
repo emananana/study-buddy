@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study or Else</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- CV / ML libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+  <div id="app">
+
+    <audio id="rain-audio" loop src="assets/audio/rain.mp3"></audio>
+    <audio id="classical-audio" loop src="assets/audio/classical.mp3"></audio>
+    <audio id="lofi-audio" loop src="assets/audio/lofi.mp3"></audio>
+    <audio id="boo-audio" src="assets/audio/boo.mp3"></audio>
+    <audio id="ih8u-audio" src="assets/audio/ih8u.mp3"></audio>
+    <audio id="digust-audio" src="assets/audio/digust.mp3"></audio>
+    <audio id="loser-audio" src="assets/audio/loser.mp3"></audio>
+
+    <!-- =========================
+         LANDING SCREEN
+    ========================== -->
+    <section id="landing-screen" class="screen active">
+      <!-- Background Camera -->
+      <video id="bg-camera" autoplay playsinline muted></video>
+      <div class="bg-overlay"></div>
+
+      <div class="fireflies" id="fireflies"></div>
+      <div class="ripples">
+        <span class="ripple ripple-1"></span>
+        <span class="ripple ripple-2"></span>
+        <span class="ripple ripple-3"></span>
+      </div>
+
+      <div class="page landing-page">
+        <header class="landing-header">
+          <img src="assets/studyorelse.png" alt="Study or Else" class="app-logo" />
+          <img
+            src="assets/stayfocused.png"
+            alt="Stay focused. Stop scrolling. Do it for the frog."
+            class="app-subtitle-img"
+          />
+        </header>
+
+        <main class="landing-floating-layout">
+          <!-- Session length on the left -->
+          <div class="floating-group session-group">
+            <img
+              src="assets/sessionsetup.png"
+              alt="Session setup"
+              class="floating-label-img"
+            />
+
+            <div class="floating-choice-row lilypad-row">
+              <button class="length-card active" data-length="25" aria-label="25 minutes">
+                <img src="assets/25min.png" alt="25 minutes" class="length-img" />
+              </button>
+
+              <button class="length-card" data-length="45" aria-label="45 minutes">
+                <img src="assets/45min.png" alt="45 minutes" class="length-img" />
+              </button>
+
+              <button class="length-card" data-length="60" aria-label="60 minutes">
+                <img src="assets/60min.png" alt="60 minutes" class="length-img" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Sound on the right -->
+          <div class="floating-group sound-group">
+            <img
+              src="assets/sound.png"
+              alt="Sound"
+              class="floating-label-img sound-label"
+            />
+
+            <div class="floating-choice-row sound-options floating-sounds">
+              <button
+                class="sound-card active"
+                data-sound="rain"
+                data-default="assets/rainy1.png"
+                data-hover="assets/rainy2.png"
+                aria-label="Rain"
+              >
+                <img src="assets/rainy1.png" alt="Rain" class="sound-option-img" />
+              </button>
+
+              <button
+                class="sound-card"
+                data-sound="classical"
+                data-default="assets/classical1.png"
+                data-hover="assets/classical2.png"
+                aria-label="Classical"
+              >
+                <img src="assets/classical1.png" alt="Classical" class="sound-option-img" />
+              </button>
+
+              <button
+                class="sound-card"
+                data-sound="lofi"
+                data-default="assets/lofi1.png"
+                data-hover="assets/lofi2.png"
+                aria-label="Lo-fi"
+              >
+                <img src="assets/lofi1.png" alt="Lo-fi" class="sound-option-img" />
+              </button>
+            </div>
+          </div>
+        </main>
+
+        <div class="landing-bottom-actions">
+          <button id="start-session-btn" class="image-btn start-button-large" aria-label="Start Session">
+            <img
+              src="assets/startsession.png"
+              alt="Start Session"
+              class="start-btn-img large-start-img"
+              id="start-session-img"
+            />
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         SESSION SCREEN
+    ========================== -->
+    <section id="session-screen" class="screen">
+      <div class="page session-page">
+        <video id="session-bg-camera" class="session-bg-camera" autoplay playsinline muted></video>
+        <div class="session-bg-overlay"></div>
+
+        <div id="session-shell" class="session-shell" data-state="focused">
+          <header class="session-controls-row">
+            <div class="controls session-controls">
+              <button id="end-session-btn" class="secondary-btn">End</button>
+            </div>
+          </header>
+
+          <aside id="focus-monitor-card" class="focus-monitor-card" data-state="focused">
+            <div class="focus-monitor-header">
+              <span class="monitor-label">Focus Monitor</span>
+              <img id="monitor-frog-mini" class="monitor-frog-mini" src="assets/focusgorfgif.gif" alt="Focused frog" />
+            </div>
+
+            <div class="mini-video-frame">
+              <video id="webcam" autoplay playsinline></video>
+              <canvas id="overlay"></canvas>
+              <div class="camera-danger-overlay"></div>
+            </div>
+
+            <div class="monitor-status-block">
+              <p id="status" class="monitor-status">FOCUSED</p>
+              <p id="focus-trigger" class="monitor-trigger">none</p>
+              <div class="monitor-stats">
+                <span>Alerts <strong id="distractions">0</strong></span>
+                <span>Score <strong id="live-focus-score">100%</strong></span>
+              </div>
+            </div>
+          </aside>
+
+          <main class="session-hero">
+            <div id="session-timer" class="hero-timer">25:00</div>
+          </main>
+
+          <section id="buddy-panel" class="session-frog-stage">
+            <div class="distracted-frog-zone" aria-hidden="true">
+              <img class="angry-frog angry-frog-top-left" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-top-center" src="assets/realizeunfocusedgorf.png" alt="" />
+              <img class="angry-frog angry-frog-top-right" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-mid-left" src="assets/realizeunfocusedgorf.png" alt="" />
+              <img class="angry-frog angry-frog-mid-right" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-far-left" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-left" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-upper-left" src="assets/realizeunfocusedgorf.png" alt="" />
+              <img class="angry-frog angry-frog-center" src="assets/realizeunfocusedgorf.png" alt="" />
+              <img class="angry-frog angry-frog-upper-right" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-right" src="assets/yellinggorf.png" alt="" />
+              <img class="angry-frog angry-frog-far-right" src="assets/yellinggorf.png" alt="" />
+              <div class="speech-bubble speech-top-left">LOCK IN</div>
+              <div class="speech-bubble speech-top-right">LOOK HERE</div>
+              <div class="speech-bubble speech-mid-left">AYO</div>
+              <div class="speech-bubble speech-mid-right">PUT IT AWAY</div>
+              <div id="session-anger-line-left" class="speech-bubble speech-left">LOCK IN</div>
+              <div id="session-anger-line-center" class="speech-bubble speech-center">GET OFF YOUR PHONE</div>
+              <div id="session-anger-line-right" class="speech-bubble speech-right">EYES UP</div>
+              <div class="speech-bubble speech-upper-left">PAY ATTENTION</div>
+              <div class="speech-bubble speech-upper-right">NO SCROLLING</div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         BREAK SCREEN
+    ========================== -->
+    <section id="break-screen" class="screen">
+      <div class="page break-page">
+        <header class="top-bar">
+          <div class="top-left">
+            <p class="session-label">BREAK</p>
+          </div>
+
+          <div class="top-center">
+            <div id="break-timer" class="session-timer">05:00</div>
+          </div>
+
+          <div class="top-right controls">
+            <button id="end-from-break-btn" class="secondary-btn">End</button>
+          </div>
+        </header>
+
+        <main class="break-layout">
+          <div class="break-left">
+            <div class="webcam-card">
+              <div class="webcam-header">
+                <span>Break Mode</span>
+              </div>
+
+              <div class="video-wrapper">
+                <div class="break-cam-placeholder">
+                  camera chill mode
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="break-right">
+            <div class="buddy-panel break-state">
+              <div class="buddy-art large" id="break-buddy-art">
+                <div class="art-placeholder">moon frog art</div>
+              </div>
+
+              <div class="buddy-speech large" id="break-buddy-message">
+                you earned this
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <!-- =========================
+         SUMMARY SCREEN
+    ========================== -->
+    <section id="summary-screen" class="screen">
+      <div class="page summary-page">
+        <video id="summary-bg-camera" autoplay playsinline muted class="session-bg-camera"></video>
+        <div class="session-bg-overlay summary-bg-overlay"></div>
+
+        <div class="summary-shell">
+          <header class="summary-hero">
+            <h1>Session Complete</h1>
+            <p id="summary-verdict">academic weapon in training</p>
+          </header>
+
+          <main class="summary-dashboard">
+            <section class="summary-score-panel">
+              <div class="summary-card-art-shell">
+                <img
+                  id="summary-card-art"
+                  src="assets/cardhappy.png"
+                  alt="Summary score card"
+                  class="summary-card-art"
+                />
+                <div class="summary-card-copy">
+                  <span class="summary-card-label">Focus Score</span>
+                  <strong id="summary-focus-score" class="summary-card-score">85%</strong>
+                  <p id="summary-buddy-message" class="summary-card-message">acceptable performance</p>
+                </div>
+              </div>
+
+              <div class="summary-chip-grid">
+                <div class="summary-chip-card">
+                  <span class="summary-chip-label">Total Time</span>
+                  <strong id="summary-total-time">25 min</strong>
+                </div>
+                <div class="summary-chip-card">
+                  <span class="summary-chip-label">Focused</span>
+                  <strong id="summary-focused-time">21 min</strong>
+                </div>
+                <div class="summary-chip-card">
+                  <span class="summary-chip-label">Distracted</span>
+                  <strong id="summary-distracted-time">4 min</strong>
+                </div>
+                <div class="summary-chip-card">
+                  <span class="summary-chip-label">Alerts</span>
+                  <strong id="summary-distractions">3</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="summary-visuals-panel">
+              <article class="summary-visual-card">
+                <div class="summary-card-heading">
+                  <h2>Focus Split</h2>
+                  <span id="summary-focus-ratio">85% on task</span>
+                </div>
+
+                <div class="summary-focus-meter">
+                  <div id="summary-focus-fill" class="summary-focus-fill"></div>
+                  <div id="summary-distracted-fill" class="summary-distracted-fill"></div>
+                </div>
+
+                <div class="summary-meter-labels">
+                  <span id="summary-focus-meter-label">Focused 21 min</span>
+                  <span id="summary-distracted-meter-label">Distracted 4 min</span>
+                </div>
+              </article>
+
+              <article class="summary-visual-card">
+                <div class="summary-card-heading">
+                  <h2>Distraction Breakdown</h2>
+                  <span>what kept stealing attention</span>
+                </div>
+
+                <div class="summary-breakdown-chart">
+                  <div class="summary-breakdown-row">
+                    <div class="summary-breakdown-topline">
+                      <span>Phone Detected</span>
+                      <strong id="summary-phone-count">1</strong>
+                    </div>
+                    <div class="summary-breakdown-track">
+                      <div id="summary-phone-bar" class="summary-breakdown-fill phone"></div>
+                    </div>
+                  </div>
+
+                  <div class="summary-breakdown-row">
+                    <div class="summary-breakdown-topline">
+                      <span>Looking Away</span>
+                      <strong id="summary-away-count">1</strong>
+                    </div>
+                    <div class="summary-breakdown-track">
+                      <div id="summary-away-bar" class="summary-breakdown-fill away"></div>
+                    </div>
+                  </div>
+
+                  <div class="summary-breakdown-row">
+                    <div class="summary-breakdown-topline">
+                      <span>Looking Down</span>
+                      <strong id="summary-down-count">1</strong>
+                    </div>
+                    <div class="summary-breakdown-track">
+                      <div id="summary-down-bar" class="summary-breakdown-fill down"></div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </section>
+          </main>
+
+          <div class="summary-actions">
+            <button id="start-again-btn" class="primary-btn">Start Again</button>
+            <button id="go-home-btn" class="secondary-btn">Back Home</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="frog-container"></div>
+
+  </div>
+
+  <!-- App scripts -->
+  <script src="app.js"></script>
+  <script src="cv.js"></script>
+</body>
+</html>
