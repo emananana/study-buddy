@@ -20,8 +20,8 @@ const LANDMARKS = {
 };
 
 const THRESHOLDS = {
-  objectCheckInterval: 900,
-  phonePersistence: 1600,
+  objectCheckInterval: 550,
+  phonePersistence: 2400,
   faceMissing: 2200,
   downwardWarning: 700,
   downwardDistracted: 1800,
@@ -38,12 +38,12 @@ const DRAWING = {
 };
 
 const FOCUS_PENALTIES = {
-  "phone detected": 15,
-  "no face detected": 10,
-  "looking down": 8,
-  "eyes left": 6,
-  "eyes right": 6,
-  "head turned": 6,
+  "phone detected": 8,
+  "no face detected": 5,
+  "looking down": 4,
+  "eyes left": 3,
+  "eyes right": 3,
+  "head turned": 3,
 };
 
 const cvState = {
@@ -320,7 +320,7 @@ async function detectObjects() {
   const now = Date.now();
 
   cvState.latestPhoneDetections = predictions.filter((prediction) => {
-    return prediction.class === "cell phone" && prediction.score >= 0.3;
+    return prediction.class === "cell phone" && prediction.score >= 0.18;
   });
 
   if (cvState.latestPhoneDetections.length > 0) {
@@ -419,6 +419,7 @@ function handleSideLook(now, gazeHorizontal) {
 
 function handleHeadTurn(now) {
   markTimerStart("headTurnStartTime", now);
+  cvState.sideLookStartTime = null;
   const headElapsed = getElapsed(cvState.headTurnStartTime, now);
 
   if (headElapsed > THRESHOLDS.headTurnDistracted) {
@@ -457,6 +458,8 @@ function updateFocusState({
   cvState.lastSeenFaceTime = now;
 
   const definitelyLookingDown = headVertical === "down" && gazeVertical === "down";
+  const studyPosture =
+    headVertical === "down" && (gazeVertical === "down" || gazeVertical === "center");
   const sideLook = gazeHorizontal !== "center";
   const headTurned = !headForward;
   const fullyFocused =
@@ -471,12 +474,25 @@ function updateFocusState({
     return;
   }
 
+  if (studyPosture) {
+    resetAttentionTimers();
+    setFocused();
+    return;
+  }
+
   if (definitelyLookingDown) {
     handleDownwardAttention(now);
     return;
   }
 
   cvState.downwardStartTime = null;
+
+  if (headTurned) {
+    handleHeadTurn(now);
+    return;
+  }
+
+  cvState.headTurnStartTime = null;
 
   if (sideLook) {
     handleSideLook(now, gazeHorizontal);
@@ -485,12 +501,6 @@ function updateFocusState({
 
   cvState.sideLookStartTime = null;
 
-  if (headTurned) {
-    handleHeadTurn(now);
-    return;
-  }
-
-  cvState.headTurnStartTime = null;
   resetAttentionTimers();
   setFocused();
 }

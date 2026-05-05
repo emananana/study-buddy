@@ -74,6 +74,10 @@ const appState = {
     intervalId: null,
     isRunning: false,
   },
+  sessionStats: {
+    focusedSeconds: 0,
+    distractedSeconds: 0,
+  },
   summary: { ...SUMMARY_DEFAULTS },
 };
 
@@ -378,8 +382,14 @@ function startTimer() {
     if (appState.timer.remainingSeconds <= 0) {
       stopTimerInterval();
       appState.timer.isRunning = false;
-      goToBreak();
+      endSession();
       return;
+    }
+
+    if (appState.liveStatus === "distracted") {
+      appState.sessionStats.distractedSeconds += 1;
+    } else {
+      appState.sessionStats.focusedSeconds += 1;
     }
 
     appState.timer.remainingSeconds -= 1;
@@ -476,6 +486,10 @@ function resetSessionMetrics() {
   appState.distractions = 0;
   appState.liveFocusScore = 100;
   lastDistractedAudioTime = 0;
+  appState.sessionStats = {
+    focusedSeconds: 0,
+    distractedSeconds: 0,
+  };
   appState.breakdown = {
     lookingDown: 0,
     phoneDetected: 0,
@@ -520,10 +534,9 @@ function getSummaryVerdict(focusScore) {
 }
 
 function updateSummaryFromSession() {
-  const totalSeconds = appState.timer.totalSeconds;
-  const completedSeconds = totalSeconds - appState.timer.remainingSeconds;
-  const distractedSeconds = Math.round(completedSeconds * ((100 - appState.liveFocusScore) / 100));
-  const focusedSeconds = Math.max(0, completedSeconds - distractedSeconds);
+  const focusedSeconds = appState.sessionStats.focusedSeconds;
+  const distractedSeconds = appState.sessionStats.distractedSeconds;
+  const completedSeconds = focusedSeconds + distractedSeconds;
   const verdict = getSummaryVerdict(appState.liveFocusScore);
 
   appState.summary = {
