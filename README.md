@@ -1,13 +1,10 @@
 # Study or Else
 
-<img width="800" height="517" alt="1gif" src="https://github.com/user-attachments/assets/1bd74780-3cc7-41fb-bab4-346fa7793500" />
-
-<img width="800" height="517" alt="froggif" src="https://github.com/user-attachments/assets/ffa97945-4736-486e-9a71-88f3917b47be" />
-
-
 Study or Else is a frog-themed focus timer that uses live computer vision to monitor attention during a study session. It combines a Pomodoro-style timer, webcam-based focus tracking, phone detection, live UI feedback, and a session summary screen.
 
 The project is built as a static web app with HTML, CSS, and JavaScript, and uses MediaPipe Face Mesh plus TensorFlow.js COCO-SSD directly in the browser.
+
+<img width="800" height="517" alt="1gif" src="https://github.com/user-attachments/assets/1bd74780-3cc7-41fb-bab4-346fa7793500" />
 
 ## Features
 
@@ -63,6 +60,8 @@ From the landmarks, the app estimates:
 - whether the eyes are looking left, right, center, up, or down
 
 The phone detector runs periodically and keeps detections alive briefly so the result does not flicker between frames.
+
+<img width="800" height="517" alt="froggif" src="https://github.com/user-attachments/assets/ffa97945-4736-486e-9a71-88f3917b47be" />
 
 ### Focus-state rules
 
