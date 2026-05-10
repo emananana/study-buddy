@@ -1,5 +1,10 @@
 # Study or Else
 
+<img width="800" height="517" alt="1gif" src="https://github.com/user-attachments/assets/1bd74780-3cc7-41fb-bab4-346fa7793500" />
+
+<img width="800" height="517" alt="froggif" src="https://github.com/user-attachments/assets/ffa97945-4736-486e-9a71-88f3917b47be" />
+
+
 Study or Else is a frog-themed focus timer that uses live computer vision to monitor attention during a study session. It combines a Pomodoro-style timer, webcam-based focus tracking, phone detection, live UI feedback, and a session summary screen.
 
 The project is built as a static web app with HTML, CSS, and JavaScript, and uses MediaPipe Face Mesh plus TensorFlow.js COCO-SSD directly in the browser.
@@ -120,20 +125,6 @@ http://localhost:8000
 
 Grant camera permission when the browser asks.
 
-## Deployment
-
-This app can be deployed easily with GitHub Pages because it is a static front-end project.
-
-Basic flow:
-
-```bash
-git add .
-git commit -m "Update project"
-git push
-```
-
-If GitHub Pages is configured to publish from the `main` branch and the root folder, the site should rebuild automatically.
-
 ## Main Screens
 
 - `Landing screen`
@@ -152,13 +143,3 @@ If GitHub Pages is configured to publish from the `main` branch and the root fol
   - focused vs distracted time
   - distraction breakdown
   - session verdict
-
-## Notes
-
-- Camera access usually requires `localhost` or `HTTPS`
-- The CV pipeline runs entirely in the browser
-- Performance may vary depending on browser and hardware
-
-## Authors / Context
-
-This project was built as a computer vision class project focused on combining real-time gaze/head analysis with a playful productivity interface.
